@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rcpp / C++ 線上講座 -- 從STL到Rcpp物件</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Rcpp / C++ 線上講座 -- 從STL到Rcpp物件">
+  <meta name="author" content="Wush">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/zenburn.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/custom.css"></link>
+<link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Rcpp / C++ 線上講座 -- 從STL到Rcpp物件</h1>
+    <h2></h2>
+    <p>Wush<br/>Taiwan R User Group</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:; background-repeat:no-repeat; background-position:center; ">
+  <img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+  <hgroup>
+    <h2>模板1: <code>stl1.cpp</code></h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;'>
+<ul>
+<li>建立</li>
+<li>連接</li>
+<li>比較</li>
+<li>長度</li>
+<li>編輯</li>
+</ul>
+
+</div>
+  <div style='float:right;width:48%;'>
+<pre><code class="cpp">#include &lt;Rcpp.h&gt;
+
+using namespace Rcpp;
+
+//[[Rcpp::export]]
+std::string learnSTL() {
+  std::string s(&quot;Hello World!&quot;);
+  return s;
+}
+
+/*** R
+learnSTL()
+*/
+</code></pre>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-2" style="background:; background-repeat:no-repeat; background-position:center; ">
+  <img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+  <hgroup>
+    <h2>模板2: <code>stl2.cpp</code></h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;'>
+<ul>
+<li>建立</li>
+<li>連接</li>
+<li>長度</li>
+<li>編輯</li>
+<li>取值</li>
+</ul>
+
+</div>
+  <div style='float:right;width:48%;'>
+<pre><code class="cpp">#include &lt;Rcpp.h&gt;
+
+using namespace Rcpp;
+
+//[[Rcpp::export]]
+std::vector&lt;int&gt; learnSTL() {
+  std::vector&lt;int&gt; v;
+  return v;
+}
+
+/*** R
+learnSTL()
+*/
+</code></pre>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:; background-repeat:no-repeat; background-position:center; ">
+  <img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+  <hgroup>
+    <h2>加速範例1: Appending</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;'>
+<pre><code class="r">library(rbenchmark)
+f.R1 &lt;-  function(n) {
+  a &lt;- c()
+  for(i in 1:n) {
+    a &lt;- append(a, i)
+  }
+  a
+}
+</code></pre>
+
+</div>
+  <div style='float:right;width:48%;'>
+<pre><code class="cpp">#include &lt;Rcpp.h&gt;
+
+using namespace Rcpp;
+
+//[[Rcpp::export(&quot;f.Cpp1&quot;)]]
+std::vector&lt;int&gt; f_Cpp1(int n) {
+  std::vector&lt;int&gt; v;
+  for(int i = 1;i &lt;= n;i++) {
+    v.push_back(i);
+  }
+  return v;
+}
+</code></pre>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:; background-repeat:no-repeat; background-position:center; ">
+  <img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+  <hgroup>
+    <h2>結果1</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">benchmark(replications=10, 
+  r1 &lt;- f.R1(10^4),
+  r2 &lt;- f.Cpp1(10^4)
+  )
+</code></pre>
+
+<pre><code>##                 test replications elapsed relative user.self sys.self
+## 1   r1 &lt;- f.R1(10^4)           10   1.738     1738     1.731    0.007
+## 2 r2 &lt;- f.Cpp1(10^4)           10   0.001        1     0.001    0.000
+##   user.child sys.child
+## 1          0         0
+## 2          0         0
+</code></pre>
+
+<pre><code class="r">all.equal(r1, r2)
+</code></pre>
+
+<pre><code>## [1] TRUE
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-5" style="background:; background-repeat:no-repeat; background-position:center; ">
+  <img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+  <hgroup>
+    <h2>Time Complexity</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;'>
+<h3>STL</h3>
+
+<p><img src="assets/img/STLPushBack.png" class="fit100"/></p>
+
+<p>\[1 + 2 + 4 + ... + 2^m = 2^{m + 1} - 1 = O(n)\]</p>
+
+<p>ps. \(2^m < n\)</p>
+
+</div>
+  <div style='float:right;width:48%;'>
+<h3>R</h3>
+
+<p><img src="assets/img/RPushBack.png" class="fit100"/></p>
+
+<p>\[1 + 2 + ... + n = O(n^2)\]</p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-6" style="background:; background-repeat:no-repeat; background-position:center; ">
+  <img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+  <hgroup>
+    <h2>在Appending資料的時候，能先設定長度可大幅加速</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;'>
+<pre><code class="r">library(rbenchmark)
+f.R2 &lt;-  function(n) {
+  a &lt;- integer(n)
+  for(i in 1:n) {
+    a[i] &lt;- i
+  }
+  a
+}
+</code></pre>
+
+</div>
+  <div style='float:right;width:48%;'>
+<pre><code class="cpp">#include &lt;Rcpp.h&gt;
+
+using namespace Rcpp;
+
+//[[Rcpp::export(&quot;f.Cpp2&quot;)]]
+std::vector&lt;int&gt; f_Cpp1(int n) {
+  std::vector&lt;int&gt; v(n);
+  for(int i = 1;i &lt;= n;i++) {
+    v[i] = i;
+  }
+  return v;
+}
+</code></pre>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-7" style="background:; background-repeat:no-repeat; background-position:center; ">
+  <img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+  <hgroup>
+    <h2>結果2</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">benchmark(replications=10, 
+  r1 &lt;- f.R1(10^4),
+  r2 &lt;- f.Cpp1(10^4),
+  r3 &lt;- f.R2(10^4),
+  r4 &lt;- f.Cpp2(10^4)
+  )
+</code></pre>
+
+<pre><code>##                 test replications elapsed relative user.self sys.self
+## 1   r1 &lt;- f.R1(10^4)           10   1.682     1682     1.678    0.003
+## 2 r2 &lt;- f.Cpp1(10^4)           10   0.001        1     0.001    0.000
+## 3   r3 &lt;- f.R2(10^4)           10   0.076       76     0.072    0.004
+## 4 r4 &lt;- f.Cpp2(10^4)           10   0.001        1     0.001    0.000
+##   user.child sys.child
+## 1          0         0
+## 2          0         0
+## 3          0         0
+## 4          0         0
+</code></pre>
+
+<pre><code class="r">all.equal(r1, r2)
+</code></pre>
+
+<pre><code>## [1] TRUE
+</code></pre>
+
+<pre><code class="r">all.equal(r1, r3)
+</code></pre>
+
+<pre><code>## [1] TRUE
+</code></pre>
+
+<pre><code class="r">all.equal(r1, r4)
+</code></pre>
+
+<pre><code>## [1] &quot;Mean relative difference: 2e-04&quot;
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-8" style="background:; background-repeat:no-repeat; background-position:center; ">
+  <img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+  <hgroup>
+    <h2>結果3</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">benchmark(replications=10, 
+  r2 &lt;- f.Cpp1(10^6),
+  r4 &lt;- f.Cpp2(10^6)
+  )
+</code></pre>
+
+<pre><code>##                 test replications elapsed relative user.self sys.self
+## 1 r2 &lt;- f.Cpp1(10^6)           10   0.154    1.525     0.141    0.013
+## 2 r4 &lt;- f.Cpp2(10^6)           10   0.101    1.000     0.089    0.011
+##   user.child sys.child
+## 1          0         0
+## 2          0         0
+</code></pre>
+
+<pre><code class="r">all.equal(r2, r4)
+</code></pre>
+
+<pre><code>## [1] &quot;Mean relative difference: 2e-06&quot;
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-9" style="background:; background-repeat:no-repeat; background-position:center; ">
+  <img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+  <hgroup>
+    <h2>Template Class</h2>
+  </hgroup>
+  <article data-timings="">
+    <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
+
+<!-- Wed Jul  2 20:27:11 2014 -->
+
+<TABLE border=1>
+<TR> <TH>  </TH> <TH> STL </TH> <TH> Rcpp </TH>  </TR>
+  <TR> <TD align="right"> int </TD> <TD> std::vector&lt;int&gt; </TD> <TD> typedef Vector&lt;INTSXP&gt; Rcpp::NumericVector </TD> </TR>
+  <TR> <TD align="right"> double </TD> <TD> std::vector&lt;double&gt; </TD> <TD> typedef Vector&lt;REALSXP&gt; Rcpp::NumericVector </TD> </TR>
+  <TR> <TD align="right"> bool </TD> <TD> std::vector&lt;bool&gt; </TD> <TD> typedef Vector&lt;LGLSXP&gt; Rcpp::NumericVector </TD> </TR>
+   </TABLE>
+
+<h3><code>REALSXP</code>, <code>INTSXP</code>, <code>LGLSXP</code></h3>
+
+<p><a href="http://docs.rexamine.com/R-devel/Rinternals_8h_source.html#l00109">http://docs.rexamine.com/R-devel/Rinternals_8h_source.html#l00109</a></p>
+
+<pre><code class="c">...
+#define LGLSXP 10 /* logical vectors */
+/* 11 and 12 were factors and ordered factors in the 1990s */
+#define INTSXP 13 /* integer vectors */
+#define REALSXP 14 /* real variables */
+...
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-10">
+<img src="assets/img/Taiwan-R-logo.png" class="logo fit100" />
+<hgroup>
+  <h2>修改Vector</h2>
+</hgroup>
+<article class = 'flexbox vcenter'>
+<h3><code>operator::[]</code></h3>
+
+<pre><code class="cpp">#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+//[[Rcpp::export]]
+SEXP modify(IntegerVector x, int i) {
+  x(i) = 0;
+  return x;
+}
+/*** R
+x &lt;- y &lt;- 1:10
+invisible(modify(x, 5))
+x
+y
+*/
+</code></pre>
+
+<h3>Iterator</h3>
+
+<pre><code class="cpp">#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+//[[Rcpp::export]]
+SEXP modify(IntegerVector x, int i) {
+  IntegerVector::iterator j = x.begin() + i;
+  *j = 0;
+  return x;
+}
+/*** R
+x &lt;- 1:10
+modify(x, 5)
+x
+*/
+</code></pre>
+
+</article>
+<!-- Presenter Notes -->
+</slide>
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='模板1: <code>stl1.cpp</code>'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='模板2: <code>stl2.cpp</code>'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='加速範例1: Appending'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='結果1'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='Time Complexity'>
+         5
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=6 title='在Appending資料的時候，能先設定長度可大幅加速'>
+         6
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=7 title='結果2'>
+         7
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=8 title='結果3'>
+         8
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=9 title='Template Class'>
+         9
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=10 title='修改Vector'>
+         10
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- MathJax: Fall back to local if CDN offline but local image fonts are not supported (saves >100MB) -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        processEscapes: true
+      }
+    });
+  </script>
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  <!-- <script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script> -->
+  <script>window.MathJax || document.write('<script type="text/x-mathjax-config">MathJax.Hub.Config({"HTML-CSS":{imageFont:null}});<\/script><script src="libraries/widgets/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"><\/script>')
+</script>
+<!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
