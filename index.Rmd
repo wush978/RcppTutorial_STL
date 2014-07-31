@@ -236,34 +236,140 @@ print.xtable(xtable(df), type="html")
 #include <Rcpp.h>
 using namespace Rcpp;
 //[[Rcpp::export]]
-SEXP modify(IntegerVector x, int i) {
-  x(i) = 0;
+SEXP modify1(IntegerVector x, int i) {
+  x[i] = 0;
   return x;
 }
-/*** R
-x <- y <- 1:10
-invisible(modify(x, 5))
-x
-y
-*/
 ```
 
+--- &vcenter
 
-### Iterator
+```{r modify1R, dependson="modify1"}
+x <- y <- 1:10
+invisible(modify1(x, 5))
+x
+y
+```
 
-```{r modify2, engine='Rcpp'}
+---
+
+## Map
+
+```{r map, engine='Rcpp'}
 #include <Rcpp.h>
 using namespace Rcpp;
 //[[Rcpp::export]]
-SEXP modify(IntegerVector x, int i) {
-  IntegerVector::iterator j = x.begin() + i;
-  *j = 0;
-  return x;
+SEXP intMapping(IntegerVector key, IntegerVector value, IntegerVector query) {
+  typedef std::map<int, int> IntMap;
+  IntMap index;
+  for(int i = 0;i < key.size();i++) {
+    index[key[i]] = value[i];
+  }
+  IntegerVector retval(query.size());
+  for(int i = 0;i < query.size();i++) {
+    IntMap::iterator j = index.find(query[i]);
+    if (j == index.end()) retval[i] = NA_INTEGER;
+    else retval[i] = j->second;
+  }
+  return retval;
 }
-/*** R
-x <- 1:10
-modify(x, 5)
-x
-*/
 ```
 
+--- &vcenter
+
+Random Access: 
+
+- map: $O(log(n))$
+- R names scanning: $O(n)$
+
+--- 
+
+```{r mapCompare}
+library(rbenchmark)
+key <- sample(1:10^4, 10^2)
+value <- seq_along(key)
+query <- sample(1:10^4, 10^4, TRUE)
+names(value) <- paste(key)
+benchmark(
+  r1 <- {
+#     names(value) <- paste(key)
+    value[paste(query)]
+  },
+  r2 <- intMapping(key, value, query)
+  )
+```
+
+--- &vcenter
+
+## Sparse Vector and Sparse Matrix
+
+```{r}
+library(Matrix)
+data(KNex, package = "Matrix")
+y <- KNex$y
+m1 <- as(KNex$mm, "matrix")
+system.time(x1 <- t(m1) %*% m1)
+# sparsity
+mean(m1 != 0)
+```
+
+--- &vcenter
+
+Sparse Matrix:
+
+```{r}
+m2 <- KNex$mm
+system.time(x2 <- t(m2) %*% m2)
+```
+
+--- &vcenter
+
+```{r motivation}
+v <- rnorm(dim(m2)[2])
+x3.R <- m2 %*% v
+class(x3.R)
+```
+
+## 小挑戰:
+
+請用Rcpp實做以下演算法：
+
+$f(v) = X v$
+
+```{r, eval=FALSE}
+sourceCpp("Xv.cpp")
+x3.cpp <- Xv(m2, v)
+x3.cpp == as.vector(x3.R)
+```
+
+--- &vcenter
+
+## 物件解析
+
+```{r dgCMatrix}
+class(m2)
+(m <- Matrix(c(0,0,2:0), 3,5))
+str(m)
+show(k <- sample(1:ncol(m), 1))
+m[,k]
+{
+  x <- numeric(m@Dim[1])
+  index_range <- seq(m@p[k], by = 1, length.out = m@p[k+1] - m@p[k]) + 1
+  nonzero_rows <- m@i[index_range] + 1
+  nonzero_row_value <- m@x[index_range]
+  x[nonzero_rows] <- nonzero_row_value
+  x
+}
+```
+
+--- &vcenter
+
+```{r Xv_Template, engine='Rcpp'}
+#include <Rcpp.h>
+using namespace Rcpp;
+//[[Rcpp::export]]
+SEXP Xv(S4 m, NumericVector v) {
+  // check dimension
+  // matrix-vector product
+}
+```
